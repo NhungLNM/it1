@@ -12,18 +12,16 @@ st.set_page_config(
 # -----------------------------------------------------------------------------
 # Declare some useful functions.
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
+# Load the data
+file_path = 'Athlete_events.xlsx'
+df = pd.read_excel(file_path)
 
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
+# Title of the app
+st.title('Olympic Athletes Analysis')
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+# Sidebar for user input
+sport = st.sidebar.selectbox('Select a Sport', df['Sport'].unique())
+
 
     MIN_YEAR = 1960
     MAX_YEAR = 2022
