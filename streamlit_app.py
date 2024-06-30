@@ -23,8 +23,8 @@ st.title('Olympic Athletes Analysis')
 sport = st.sidebar.selectbox('Select a Sport', df['Sport'].unique())
 
 
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
+    MIN_YEAR = 1896
+    MAX_YEAR = 2016
 
     # The data above has columns like:
     # - Country Name
