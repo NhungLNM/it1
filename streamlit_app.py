@@ -8,6 +8,9 @@ import plotly.express as px
 file_path = 'Athlete_events.xlsx'
 df = pd.read_excel(file_path)
 
+# Handle any potential missing values in the dataframe
+df.dropna(subset=['NOC', 'Sport', 'Age', 'Medal'], inplace=True)
+
 # Title of the app
 st.title('Olympic Athletes Analysis')
 
@@ -52,25 +55,4 @@ sport_list = filtered_data['Sport'].dropna().unique()
 sport = st.sidebar.selectbox('Select a Sport', sport_list)
 
 # Filter data further based on the selected sport
-filtered_data = filtered_data[filtered_data['Sport'] == sport]
 
-# Plotting - Histogram for Age Distribution
-st.header("Age Distribution of Athletes")
-if not filtered_data.empty:
-    fig, ax = plt.subplots()
-    sns.histplot(filtered_data['Age'].dropna(), kde=True, ax=ax)
-    ax.set_title(f'Age Distribution of Athletes in {sport} from {country}')
-    ax.set_xlabel('Age')
-    ax.set_ylabel('Frequency')
-    st.pyplot(fig)
-else:
-    st.warning(f"No data available for {sport} from {country}")
-
-# Plotting - Pie Chart for Medal Distribution
-st.header("Medal Distribution")
-if not filtered_data['Medal'].dropna().empty:
-    medal_counts = filtered_data['Medal'].value_counts()
-    fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
-    st.plotly_chart(fig_pie)
-else:
-    st.warning(f"No medal data available for {sport} from {country}")
