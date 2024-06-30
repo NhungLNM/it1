@@ -1,23 +1,13 @@
 import streamlit as st
 import pandas as pd
 import math
-from pathlib import Path
+import plotly.express as px  # Import plotly express
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
     page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
+    page_icon=':earth_americas:',  # This is an emoji shortcode. Could be a URL too.
 )
-
-# Load the data
-file_path = 'Athlete_events.xlsx'
-df = pd.read_excel(file_path)
-
-# Title of the app
-st.title('Olympic Athletes Analysis')
-
-# Sidebar for user input
-sport = st.sidebar.selectbox('Select a Sport', df['Sport'].unique())
 
 # Useful constants
 MIN_YEAR = 1896
@@ -92,11 +82,9 @@ filtered_gdp_df = gdp_df[
 
 st.header('GDP over time', divider='gray')
 
-# Plotting - Pie Chart for Medal Distribution
-st.header("Medal Distribution")
-medal_counts = filtered_data['Medal'].value_counts()
-fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
-st.plotly_chart(fig_pie)
+st.line_chart(
+    filtered_gdp_df.pivot(index='Year', columns='Country Code', values='GDP')
+)
 
 st.text('')
 st.text('')
@@ -104,6 +92,25 @@ st.text('')
 first_year = gdp_df[gdp_df['Year'] == from_year]
 last_year = gdp_df[gdp_df['Year'] == to_year]
 
+st.header(f'GDP in {to_year}', divider='gray')
+
+st.text('')
+
+cols = st.columns(4)
+
+for i, country in enumerate(selected_countries):
+    col = cols[i % len(cols)]
+
+    with col:
+        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
+        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
+
+        if math.isnan(first_gdp):
+            growth = 'n/a'
+            delta_color = 'off'
+        else:
+            growth = f'{last_gdp / first_gdp:,.2f}x'
+            delta_color = 'normal'
 
         st.metric(
             label=f'{country} GDP',
