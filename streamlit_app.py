@@ -92,12 +92,11 @@ filtered_gdp_df = gdp_df[
 
 st.header('GDP over time', divider='gray')
 
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
-)
+# Plotting - Pie Chart for Medal Distribution
+st.header("Medal Distribution")
+medal_counts = filtered_data['Medal'].value_counts()
+fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
+st.plotly_chart(fig_pie)
 
 st.text('')
 st.text('')
@@ -105,25 +104,6 @@ st.text('')
 first_year = gdp_df[gdp_df['Year'] == from_year]
 last_year = gdp_df[gdp_df['Year'] == to_year]
 
-st.header(f'GDP in {to_year}', divider='gray')
-
-st.text('')
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
 
         st.metric(
             label=f'{country} GDP',
