@@ -1,2 +1,11 @@
 streamlit
 pandas
+matplotlib
+numpy
+geopandas
+seaborn
+matplotlib.colors 
+cartopy
+openpyxl==3.1.2
+streamlit
+plotly
