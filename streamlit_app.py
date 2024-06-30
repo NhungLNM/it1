@@ -1,119 +1,73 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px  # Import plotly express
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
 
-# Set the title and favicon that appear in the Browser's tab bar.
-st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:',  # This is an emoji shortcode. Could be a URL too.
-)
+# Load the data
+file_path = 'Athlete_events.xlsx'
+df = pd.read_excel(file_path)
+
+# Title of the app
+st.title('Olympic Athletes Analysis')
+
+# Sidebar for user input
+st.sidebar.title("Filter Options")
 
 # Useful constants
 MIN_YEAR = 1896
 MAX_YEAR = 2016
 
-# Function to get GDP data
-def get_gdp_data():
-    # Assuming raw_gdp_df is already loaded with the data
-    # For example:
-    raw_gdp_df = pd.read_csv('gdp_data.csv')  # Replace with actual data source
+# Convert NOC to country names using an example mapping (you should replace this with a complete mapping)
+noc_to_country = {
+    'USA': 'United States',
+    'GBR': 'United Kingdom',
+    'CHN': 'China',
+    'RUS': 'Russia',
+    'GER': 'Germany',
+    'AUS': 'Australia',
+    # Add all other NOCs with their respective country names
+}
 
-    # Pivot the data
-    gdp_df = raw_gdp_df.melt(
-        id_vars=['Country Code'],
-        value_vars=[str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        var_name='Year',
-        value_name='GDP',
-    )
+# Add a full mapping for all NOCs from a reliable source or manually add the NOCs
+df['Country'] = df['NOC'].map(noc_to_country)
 
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
+# List of unique countries for selection, remove NaN values if any
+country_list = df['Country'].dropna().unique()
+country_list.sort()
 
-    return gdp_df
+# Sidebar for country selection
+country = st.sidebar.selectbox('Select a Country', country_list)
 
-# Get GDP data
-gdp_df = get_gdp_data()
+# Filter data based on the selected country
+filtered_data = df[df['Country'] == country]
 
-# Set the title that appears at the top of the page.
-st.markdown('''
-# :earth_americas: GDP dashboard
+# Introduction
+st.markdown("""
+## Introduction
+This dashboard provides a comprehensive analysis of Olympic athletes' data. Use the sidebar to filter by country and sport, and explore various visualizations including age distribution, medal distribution, country participation, and more.
+""")
 
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-''')
+# Sidebar for sport selection
+sport_list = filtered_data['Sport'].unique()
+sport = st.sidebar.selectbox('Select a Sport', sport_list)
 
-# Add some spacing
-st.text('')
-st.text('')
+# Filter data further based on the selected sport
+filtered_data = filtered_data[filtered_data['Sport'] == sport]
 
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
+# Plotting - Histogram for Age Distribution
+st.header("Age Distribution of Athletes")
+fig, ax = plt.subplots()
+sns.histplot(filtered_data['Age'].dropna(), kde=True, ax=ax)
+ax.set_title(f'Age Distribution of Athletes in {sport} from {country}')
+ax.set_xlabel('Age')
+ax.set_ylabel('Frequency')
+st.pyplot(fig)
 
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value]
-)
+# Plotting - Pie Chart for Medal Distribution
+st.header("Medal Distribution")
+medal_counts = filtered_data['Medal'].value_counts()
+fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
+st.plotly_chart(fig_pie)
 
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN']
-)
-
-st.text('')
-st.text('')
-st.text('')
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries)) &
-    (gdp_df['Year'] <= to_year) &
-    (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-st.line_chart(
-    filtered_gdp_df.pivot(index='Year', columns='Country Code', values='GDP')
-)
-
-st.text('')
-st.text('')
-
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
-
-st.header(f'GDP in {to_year}', divider='gray')
-
-st.text('')
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
