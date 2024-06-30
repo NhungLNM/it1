@@ -55,4 +55,35 @@ sport_list = filtered_data['Sport'].dropna().unique()
 sport = st.sidebar.selectbox('Select a Sport', sport_list)
 
 # Filter data further based on the selected sport
+filtered_data_sport = filtered_data[filtered_data['Sport'] == sport]
+
+# Plotting - Histogram for Age Distribution
+st.header(f"Age Distribution of Athletes in {sport}")
+if not filtered_data_sport.empty:
+    fig, ax = plt.subplots()
+    sns.histplot(filtered_data_sport['Age'].dropna(), kde=True, ax=ax)
+    ax.set_title(f'Age Distribution of Athletes in {sport} from {country}')
+    ax.set_xlabel('Age')
+    ax.set_ylabel('Frequency')
+    st.pyplot(fig)
+else:
+    st.warning(f"No data available for {sport} from {country}")
+
+# Plotting - Pie Chart for Medal Distribution
+st.header(f"Medal Distribution in {sport}")
+if not filtered_data_sport['Medal'].dropna().empty:
+    medal_counts = filtered_data_sport['Medal'].value_counts()
+    fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
+    st.plotly_chart(fig_pie)
+else:
+    st.warning(f"No medal data available for {sport} from {country}")
+
+# Plotting - Line Graph for Number of Athletes over the Years
+st.header(f"Number of Athletes Over the Years in {sport}")
+if not filtered_data_sport.empty:
+    year_counts = filtered_data_sport['Year'].value_counts().sort_index()
+    fig_line = px.line(x=year_counts.index, y=year_counts.values, labels={'x': 'Year', 'y': 'Number of Athletes'}, title=f'Number of Athletes Over the Years in {sport} from {country}')
+    st.plotly_chart(fig_line)
+else:
+    st.warning(f"No data available for {sport} from {country}")
 
