@@ -22,7 +22,19 @@ st.title('Olympic Athletes Analysis')
 # Sidebar for user input
 sport = st.sidebar.selectbox('Select a Sport', df['Sport'].unique())
 
+@st.cache_data
+def get_gdp_data():
+    """Grab GDP data from a CSV file.
 
+    This uses caching to avoid having to read the file every time. If we were
+    reading from an HTTP endpoint instead of a file, it's a good idea to set
+    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
+    """
+
+    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
+    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
+    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+    
     MIN_YEAR = 1896
     MAX_YEAR = 2016
 
