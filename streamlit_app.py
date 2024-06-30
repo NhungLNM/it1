@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-import plotly.graph_objects as go
 
 # Load the data
 file_path = 'Athlete_events.xlsx'
@@ -15,11 +14,7 @@ st.title('Olympic Athletes Analysis')
 # Sidebar for user input
 st.sidebar.title("Filter Options")
 
-# Useful constants
-MIN_YEAR = 1896
-MAX_YEAR = 2016
-
-# Convert NOC to country names using an example mapping (you should replace this with a complete mapping)
+# Convert NOC to country names using an example mapping (replace with a complete mapping)
 noc_to_country = {
     'USA': 'United States',
     'GBR': 'United Kingdom',
@@ -32,6 +27,9 @@ noc_to_country = {
 
 # Add a full mapping for all NOCs from a reliable source or manually add the NOCs
 df['Country'] = df['NOC'].map(noc_to_country)
+
+# Handle missing country mappings
+df['Country'] = df['Country'].fillna(df['NOC'])
 
 # List of unique countries for selection, remove NaN values if any
 country_list = df['Country'].dropna().unique()
@@ -50,7 +48,7 @@ This dashboard provides a comprehensive analysis of Olympic athletes' data. Use 
 """)
 
 # Sidebar for sport selection
-sport_list = filtered_data['Sport'].unique()
+sport_list = filtered_data['Sport'].dropna().unique()
 sport = st.sidebar.selectbox('Select a Sport', sport_list)
 
 # Filter data further based on the selected sport
@@ -58,16 +56,21 @@ filtered_data = filtered_data[filtered_data['Sport'] == sport]
 
 # Plotting - Histogram for Age Distribution
 st.header("Age Distribution of Athletes")
-fig, ax = plt.subplots()
-sns.histplot(filtered_data['Age'].dropna(), kde=True, ax=ax)
-ax.set_title(f'Age Distribution of Athletes in {sport} from {country}')
-ax.set_xlabel('Age')
-ax.set_ylabel('Frequency')
-st.pyplot(fig)
+if not filtered_data.empty:
+    fig, ax = plt.subplots()
+    sns.histplot(filtered_data['Age'].dropna(), kde=True, ax=ax)
+    ax.set_title(f'Age Distribution of Athletes in {sport} from {country}')
+    ax.set_xlabel('Age')
+    ax.set_ylabel('Frequency')
+    st.pyplot(fig)
+else:
+    st.warning(f"No data available for {sport} from {country}")
 
 # Plotting - Pie Chart for Medal Distribution
 st.header("Medal Distribution")
-medal_counts = filtered_data['Medal'].value_counts()
-fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
-st.plotly_chart(fig_pie)
-
+if not filtered_data['Medal'].dropna().empty:
+    medal_counts = filtered_data['Medal'].value_counts()
+    fig_pie = px.pie(values=medal_counts.values, names=medal_counts.index, title=f'Medal Distribution in {sport} from {country}')
+    st.plotly_chart(fig_pie)
+else:
+    st.warning(f"No medal data available for {sport} from {country}")
